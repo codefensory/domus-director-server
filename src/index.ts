@@ -22,7 +22,7 @@ async function sendArduinoCommand(
   command: string
 ): Promise<Result<Response, Error>> {
   const responseResult = await Result.safe(
-    fetch("http://localhost:8080/arduino")
+    fetch("http://0.0.0.0:8080/arduino")
   );
 
   if (responseResult.isErr()) {

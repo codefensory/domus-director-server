@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup src",
     "start": "DEBUG='api:*' node dist/index.js",
-    "dev": "DEBUG='api:*' tsup src --watch --onSuccess \"'concurrently 'node dist/index.js' 'node dist/workers/index.js'\""
+    "workers": "DEBUG='api:*' node dist/workers/index.js",
+    "dev": "tsup src --watch --onSuccess \"run-p 'start' 'workers'\""
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +18,7 @@
     "@types/node": "^20.4.2",
     "concurrently": "^8.2.0",
     "debug": "^4.3.4",
+    "npm-run-all": "^4.1.5",
     "prisma": "^5.0.0",
     "ts-node": "^10.9.1",
     "tsup": "^7.1.0",
