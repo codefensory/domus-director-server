@@ -44,6 +44,8 @@ async function sendArduinoCommand(
   return Ok(response);
 }
 
+app.use(express.static('public'))
+
 app.get("/start", async (_, res) => {
   const session = await prisma.session.create({
     data: {
