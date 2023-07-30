@@ -6,7 +6,7 @@ import { exec } from "child_process";
 import fs from "fs";
 
 import { prisma } from "./utils";
-import { uploadGifQueue } from "./workers/queues";
+import { generatePreviewQueue, uploadGifQueue } from "./workers/queues";
 
 const logger = debug("api:main");
 
@@ -90,7 +90,7 @@ app.post("/update/:id/:state", async (req, res) => {
 
       processing = true;
 
-      const gifPath = `gifs/gif-${id}.gif`;
+      const gifPath = `public/gifs/gif-${id}.gif`;
 
       try {
         fs.rmSync(gifPath);
@@ -98,16 +98,29 @@ app.post("/update/:id/:state", async (req, res) => {
 
       exec(
         `ffmpeg -f v4l2 -video_size 640x480 -i /dev/video0 -i resources/overlay.png -ss 1 -t 5 -filter_complex "[0:v] fps=4,overlay=0:0" "${gifPath}"`,
-        (error) => {
+        async (error) => {
           processing = false;
 
           if (error) {
-            console.error(`error: ${error.message}`);
+            logger("Error:", error);
 
             return;
           }
 
+          logger("Gif capture complete!");
+
+          await prisma.session.update({
+            data: {
+              url: gifPath,
+            },
+            where: {
+              id,
+            },
+          });
+
           uploadGifQueue.createJob({ id }).save();
+
+          generatePreviewQueue.createJob({ id }).save();
         }
       );
 

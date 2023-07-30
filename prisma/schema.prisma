@@ -11,16 +11,9 @@ datasource db {
 }
 
 model Session {
-  id    Int  @id @default(autoincrement())
-  state Int  @default(0)
-  gif   Gif? @relation(fields: [gifId], references: [id])
-  gifId Int? @unique
-}
-
-model Gif {
-  id        Int      @id @default(autoincrement())
-  url       String
-  qrUrl     String?
-  Session   Session?
-  sessionId Int?     @unique
+  id          Int     @id @default(autoincrement())
+  state       Int     @default(0)
+  url         String?
+  preview     String?
+  downloadUrl String?
 }
