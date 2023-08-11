@@ -44,7 +44,7 @@ async function sendArduinoCommand(
   return Ok(response);
 }
 
-app.use(express.static('public'))
+app.use(express.static("public"));
 
 app.get("/start", async (_, res) => {
   const session = await prisma.session.create({
@@ -90,14 +90,18 @@ app.post("/update/:id/:state", async (req, res) => {
 
       processing = true;
 
+      const framesPath = `resources/frames/session-${id}`;
+
       const gifPath = `public/gifs/gif-${id}.gif`;
 
-      try {
-        fs.rmSync(gifPath);
-      } catch {}
+      if (fs.existsSync(framesPath)) {
+        fs.rmSync(framesPath, { recursive: true });
+      }
+
+      fs.mkdirSync(framesPath, { recursive: true });
 
       exec(
-        `ffmpeg -f v4l2 -video_size 640x480 -i /dev/video0 -i resources/overlay.png -ss 1 -t 5 -filter_complex "[0:v] fps=4,overlay=0:0" "${gifPath}"`,
+        `${process.env.FFMPEG_CAMERA} "${framesPath}/frame%04d.png" && ${process.env.GIFSKI} -o public/gifs/gif-${id}.gif resources/frames/session-${id}/frame*.png`,
         async (error) => {
           processing = false;
 
@@ -179,6 +183,29 @@ app.get("/arduino", (_, res) => {
   logger("arduino received, simulating...");
 
   res.send("OK");
+});
+
+app.get("/sessions/:page", async (req, res) => {
+  const page = req.params.page;
+
+  const sessions = await prisma.session.findMany({
+    where: {
+      state: { gte: 1 },
+    },
+    take: 8,
+    skip: Number(page) * 8,
+  });
+
+  const total = await prisma.session.count({
+    where: {
+      state: { gte: 1 },
+    },
+  });
+
+  res.json({
+    sessions,
+    total,
+  });
 });
 
 function init() {

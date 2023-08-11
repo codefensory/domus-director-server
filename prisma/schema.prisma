@@ -11,9 +11,10 @@ datasource db {
 }
 
 model Session {
-  id          Int     @id @default(autoincrement())
-  state       Int     @default(0)
+  id          Int      @id @default(autoincrement())
+  state       Int      @default(0)
   url         String?
   preview     String?
   downloadUrl String?
+  createdAt   DateTime @default(now())
 }
