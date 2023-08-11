@@ -18,7 +18,7 @@ const generatePreviewProcessor = async (job: Job<any>) => {
     } catch {}
 
     exec(
-      `ffmpeg -i "public/gifs/gif-${job.data.id}.gif" -vf "fps=fps=1,scale=200:-1" ${previewPath}`,
+      `ffmpeg -i "public/gifs/gif-${job.data.id}.gif" -vf "fps=fps=1,scale=428:-1" ${previewPath}`,
       async (error) => {
         if (error) return reject(error);
 

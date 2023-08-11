@@ -4,6 +4,7 @@ import { Result, Err, Ok } from "oxide.ts";
 import BeeQueue from "bee-queue";
 import { exec } from "child_process";
 import fs from "fs";
+import cors from "cors";
 
 import { prisma } from "./utils";
 import { generatePreviewQueue, uploadGifQueue } from "./workers/queues";
@@ -17,6 +18,8 @@ const port = (process.env.PORT || 8080) as number;
 const takePhotoQueue = new BeeQueue("take-photo");
 
 let processing = false;
+
+const ITEMS_PER_PAGE = 15;
 
 async function sendArduinoCommand(
   command: string
@@ -44,7 +47,9 @@ async function sendArduinoCommand(
   return Ok(response);
 }
 
-app.use(express.static("public"));
+app.use(cors({ origin: "*" }));
+
+app.use("/public", express.static("public"));
 
 app.get("/start", async (_, res) => {
   const session = await prisma.session.create({
@@ -192,8 +197,11 @@ app.get("/sessions/:page", async (req, res) => {
     where: {
       state: { gte: 1 },
     },
-    take: 8,
-    skip: Number(page) * 8,
+    orderBy: {
+      id: "desc",
+    },
+    take: ITEMS_PER_PAGE,
+    skip: Number(page) * ITEMS_PER_PAGE,
   });
 
   const total = await prisma.session.count({
