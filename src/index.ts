@@ -130,6 +130,10 @@ app.post("/update/:id/:state", async (req, res) => {
           uploadGifQueue.createJob({ id }).save();
 
           generatePreviewQueue.createJob({ id }).save();
+
+          try {
+            fs.rmSync(framesPath, { recursive: true });
+          } catch {}
         }
       );
 
