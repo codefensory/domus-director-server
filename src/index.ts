@@ -1,13 +1,9 @@
 import express from "express";
 import debug from "debug";
-import { Result, Err, Ok } from "oxide.ts";
-import BeeQueue from "bee-queue";
-import { exec } from "child_process";
-import fs from "fs";
 import cors from "cors";
 
-import { prisma } from "./utils";
-import { generatePreviewQueue, uploadGifQueue } from "./workers/queues";
+import { prisma, sendArduinoCommand, events } from "./utils";
+import { globalState } from "./state";
 
 const logger = debug("api:main");
 
@@ -15,181 +11,28 @@ const app = express();
 
 const port = (process.env.PORT || 8080) as number;
 
-const takePhotoQueue = new BeeQueue("take-photo");
-
-let processing = false;
-
 const ITEMS_PER_PAGE = 15;
-
-async function sendArduinoCommand(
-  command: string
-): Promise<Result<Response, Error>> {
-  const responseResult = await Result.safe(
-    fetch("http://0.0.0.0:8080/arduino")
-  );
-
-  if (responseResult.isErr()) {
-    const error = responseResult.unwrapErr();
-
-    logger(error);
-
-    return Err(error);
-  }
-
-  const response = responseResult.unwrap();
-
-  if (!response.ok) {
-    logger("Error: arduino error");
-
-    return Err(new Error("arduino error"));
-  }
-
-  return Ok(response);
-}
 
 app.use(cors({ origin: "*" }));
 
 app.use("/public", express.static("public"));
 
-app.get("/start", async (_, res) => {
-  const session = await prisma.session.create({
-    data: {
-      state: 0,
-    },
-  });
+app.get("/command/:event", async (req, res) => {
+  const event = req.params.event;
 
-  const result = await sendArduinoCommand("");
+  const result = await sendArduinoCommand(event);
 
   if (result.isErr()) {
-    res.send(500);
-
-    return;
+    logger("Error sending command to arduino", result.unwrapErr());
   }
 
-  res.json({ id: session.id });
+  await events[event]?.(globalState.currentSessionId);
+
+  res.status(200).send("OK");
 });
 
-app.post("/update/:id/:state", async (req, res) => {
-  const id = parseInt(req.params.id);
-
-  const state = parseInt(req.params.state);
-
-  if (isNaN(state) || isNaN(id)) {
-    res.status(400).send("INVALID");
-
-    return;
-  }
-
-  const updateGame = async (command?: string, takePhoto: boolean = false) => {
-    await prisma.session.update({
-      data: { state },
-      where: { id },
-    });
-
-    if (takePhoto) {
-      if (processing) {
-        res.status(500).send("bussy");
-
-        return;
-      }
-
-      processing = true;
-
-      const framesPath = `resources/frames/session-${id}`;
-
-      const gifPath = `public/gifs/gif-${id}.gif`;
-
-      if (fs.existsSync(framesPath)) {
-        fs.rmSync(framesPath, { recursive: true });
-      }
-
-      fs.mkdirSync(framesPath, { recursive: true });
-
-      exec(
-        `${process.env.FFMPEG_CAMERA} "${framesPath}/frame%04d.png" && ${process.env.GIFSKI} -o public/gifs/gif-${id}.gif resources/frames/session-${id}/frame*.png`,
-        async (error) => {
-          processing = false;
-
-          if (error) {
-            logger("Error:", error);
-
-            return;
-          }
-
-          logger("Gif capture complete!");
-
-          await prisma.session.update({
-            data: {
-              url: gifPath,
-            },
-            where: {
-              id,
-            },
-          });
-
-          uploadGifQueue.createJob({ id }).save();
-
-          generatePreviewQueue.createJob({ id }).save();
-
-          try {
-            fs.rmSync(framesPath, { recursive: true });
-          } catch {}
-        }
-      );
-
-      setTimeout(() => sendArduinoCommand(command), 2500);
-
-      res.send(200);
-
-      return;
-    }
-
-    const result = await sendArduinoCommand(command);
-
-    if (result.isErr()) {
-      res.send(500);
-
-      return;
-    }
-
-    res.send(200);
-  };
-
-  switch (state) {
-    case 1:
-      await updateGame("", true);
-
-      logger("hacking game");
-
-      await takePhotoQueue.createJob({ id }).save();
-
-      break;
-    case 2:
-      await updateGame();
-
-      logger("stop hacking game");
-
-      break;
-    case 3:
-      await updateGame();
-
-      logger("explotion");
-
-      break;
-    case 4:
-      await updateGame();
-
-      logger("end");
-      break;
-    default:
-      res.status(400).send("STATUS NOT VALID");
-
-      return;
-  }
-});
-
-app.get("/arduino", (_, res) => {
-  logger("arduino received, simulating...");
+app.get("/arduino", (req, res) => {
+  logger("arduino received, simulating...", { commands: req.query });
 
   res.send("OK");
 });
