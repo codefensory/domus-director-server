@@ -1,13 +1,13 @@
 {
   "startSession": {
-    "arduinoCommand": "http://127.0.0.1:8080/arduino?speed=1&power=on&light=on",
+    "arduinoCommand": "/arduino?speed=1&power=on&light=on",
     "clip": {
       "name": "CLIP2",
       "time": 0
     }
   },
   "endSession": {
-    "arduinoCommand": "http://127.0.0.1:8080/arduino?speed=1&power=on&light=on",
+    "arduinoCommand": "/arduino?speed=1&power=on&light=on",
     "clip": {
       "name": "CLIP1",
       "time": 0
@@ -20,14 +20,14 @@
     }
   },
   "hacking": {
-    "arduinoCommand": "http://127.0.0.1:8080/arduino?speed=1&power=on&light=on",
+    "arduinoCommand": "/arduino?speed=1&power=on&light=on",
     "clip": {
       "name": "CLIP6",
       "time": 0
     }
   },
   "endHacking": {
-    "arduinoCommand": "http://127.0.0.1:8080/arduino?speed=1&power=on&light=on",
+    "arduinoCommand": "/arduino?speed=1&power=on&light=on",
     "clip": {
       "name": "CLIP6",
       "time": 10

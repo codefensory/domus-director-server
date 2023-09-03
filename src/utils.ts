@@ -20,7 +20,7 @@ export async function sendArduinoCommand(command: string): Promise<Result<Respon
     return Ok(new Response());
   }
 
-  const responseResult = await Result.safe(fetch(arduinoCommand));
+  const responseResult = await Result.safe(fetch(`${process.env.ARDUINO_URL}${arduinoCommand}`));
 
   if (responseResult.isErr()) {
     const error = responseResult.unwrapErr();

@@ -19,7 +19,7 @@ async function start() {
   await videosManager.run();
 
   window.addEventListener("keydown", (event) => {
-    if (event.key === "p") {
+    if (event.key === "4") {
       window.location.reload();
 
       return;
@@ -30,19 +30,19 @@ async function start() {
     }
 
     switch (event.key) {
-      case "q":
+      case "1":
         if (globalState.currentVideo === 0) {
           videosManager.nextVideo();
         }
         break;
 
-      case "v":
+      case "2":
         if (globalState.currentVideo === 3) {
           videosManager.nextVideo();
         }
         break;
 
-      case "r":
+      case "3":
         if (globalState.currentVideo === 7) {
           videosManager.nextVideo();
         }
