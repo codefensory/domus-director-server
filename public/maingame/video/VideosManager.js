@@ -72,6 +72,14 @@ class VideosManager {
     this.prepare();
   }
 
+  goToVideo(index) {
+    this.videos[this.currentVideo].end();
+
+    this.currentVideo = index;
+
+    this.prepare();
+  }
+
   handleTimeUpdate(mediaIndex) {
     if (mediaIndex === this.currentMedia) {
       return;

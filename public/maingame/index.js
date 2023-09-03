@@ -1,10 +1,6 @@
 import VideosManagerFactory from "./factories/VideosManagerFactory.js";
 import { globalState } from "./state.js";
 
-const stateText = document.getElementById("state");
-
-const infoText = document.getElementById("info");
-
 let canPressButton = false;
 
 async function start() {
@@ -15,15 +11,19 @@ async function start() {
 
     canPressButton = video.loop;
 
-    infoText.innerHTML = canPressButton ? "presiona" : "espera";
+    console.log("video: ", index);
 
-    stateText.innerHTML = index;
+    console.log(canPressButton ? "presiona" : "espera");
   });
 
   await videosManager.run();
 
   window.addEventListener("keydown", (event) => {
-    // TODO: hacer el reinicio manual
+    if (event.key === "p") {
+      window.location.reload();
+
+      return;
+    }
 
     if (!canPressButton) {
       return;
