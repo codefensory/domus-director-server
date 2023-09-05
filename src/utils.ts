@@ -5,7 +5,8 @@ import fs from "fs";
 
 import endSession from "./events/endSession";
 import startSession from "./events/startSession";
-import startCamera from "./events/startCamera";
+import record from "./events/record";
+import recordAndSave from "./events/recordAndSave";
 
 export const prisma = new PrismaClient();
 
@@ -43,6 +44,7 @@ export async function sendArduinoCommand(command: string): Promise<Result<Respon
 
 export const events: Record<string, (sessionId: number) => Promise<void>> = {
   endSession,
-  startCamera,
+  record,
+  recordAndSave,
   startSession,
 };

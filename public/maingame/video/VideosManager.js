@@ -1,8 +1,10 @@
+import Media from "./Media.js";
+
 class VideosManager {
   constructor(videos, medias) {
     this.videos = videos;
-    /** @type {HTMLMediaElement[]} */
-    this.medias = medias;
+    /** @type {Media[]} */
+    this.medias = medias.map((media) => new Media(media));
     this.currentMedia = 0;
     this.currentVideo = 0;
 
@@ -10,29 +12,23 @@ class VideosManager {
   }
 
   async run() {
-    this.medias[0].src = this.videos[0].src;
+    this.medias[0].media.src = this.videos[0].src;
 
-    this.medias[0].loop = this.videos[0].loop;
+    this.medias[0].media.loop = this.videos[0].loop;
 
     for (let i = 0; i < this.medias.length; i++) {
-      const media = this.medias[i];
+      const media = this.medias[i].media;
 
       media.addEventListener("ended", this.nextVideo.bind(this));
 
-      media.addEventListener("timeupdate", () => this.handleTimeUpdate(i));
+      media.addEventListener("timeupdate", () => this.handleTimeUpdate(media));
     }
 
     await this.prepare();
   }
 
   async prepare() {
-    const media = this.medias[this.currentMedia];
-
-    const nextMediaIndex = (this.currentMedia + 1) % this.medias.length;
-
-    const nextMedia = this.medias[nextMediaIndex];
-
-    const nextVideoIndex = (this.currentVideo + 1) % this.videos.length;
+    const media = this.medias[0];
 
     const video = this.videos[this.currentVideo];
 
@@ -40,28 +36,27 @@ class VideosManager {
 
     this.emitOnChangeListeners(video, this.currentVideo);
 
-    await media.play();
+    await media.media.play();
 
-    nextMedia.muted = true;
+    const promise = this.preloadMedias();
 
-    media.muted = false;
+    media.media.muted = false;
 
-    media.style.opacity = 1;
+    media.media.style.opacity = 1;
 
-    this.currentMedia = nextMediaIndex;
+    return promise;
+  }
 
-    // Wait for the video to be ready
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        nextMedia.style.opacity = 0;
-        nextMedia.src = this.videos[nextVideoIndex].src;
-        nextMedia.loop = this.videos[nextVideoIndex].loop;
+  preloadMedias() {
+    const promises = [];
 
-        nextMedia.pause();
-        nextMedia.currentTime = 0;
-        resolve();
-      }, 100);
-    });
+    for (let i = 1; i < this.medias.length; i++) {
+      const video = this.videos[(this.currentVideo + i) % this.videos.length];
+
+      promises.push(this.medias[i].preload(video));
+    }
+
+    return Promise.all(promises);
   }
 
   nextVideo() {
@@ -69,23 +64,31 @@ class VideosManager {
 
     this.currentVideo = (this.currentVideo + 1) % this.videos.length;
 
+    const firstMedia = this.medias.splice(0, 1);
+
+    this.medias.push(...firstMedia);
+
     this.prepare();
   }
 
-  goToVideo(index) {
+  skipAndNextVideo() {
     this.videos[this.currentVideo].end();
 
-    this.currentVideo = index;
+    this.currentVideo = (this.currentVideo + 2) % this.videos.length;
+
+    const firstMedia = this.medias.splice(0, 2);
+
+    this.medias.push(...firstMedia);
 
     this.prepare();
   }
 
-  handleTimeUpdate(mediaIndex) {
-    if (mediaIndex === this.currentMedia) {
+  handleTimeUpdate(media) {
+    if (!media.src.includes(this.videos[this.currentVideo].src)) {
       return;
     }
 
-    const time = this.medias[mediaIndex].currentTime;
+    const time = media.currentTime;
 
     this.videos[this.currentVideo].update(time);
   }

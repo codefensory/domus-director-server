@@ -1,14 +1,13 @@
 import fs from "fs";
 import debug from "debug";
-import { prisma, sendArduinoCommand } from "../utils";
+import { prisma } from "../utils";
 import { exec } from "child_process";
 import { generatePreviewQueue, uploadGifQueue } from "../workers/queues";
+import { globalState } from "../state";
 
 const logger = debug("api:events:hacking");
 
-let processing = false;
-
-const startCamera = async (sessionId: number) => {
+const recordAndSave = async (sessionId: number) => {
   if (!sessionId) {
     logger("no session id");
 
@@ -20,7 +19,7 @@ const startCamera = async (sessionId: number) => {
     where: { id: sessionId },
   });
 
-  if (processing) {
+  if (globalState.processing) {
     logger("hacking bussy");
 
     return;
@@ -28,7 +27,7 @@ const startCamera = async (sessionId: number) => {
 
   const id = sessionId;
 
-  processing = true;
+  globalState.processing = true;
 
   const framesPath = `resources/frames/session-${id}`;
 
@@ -38,16 +37,16 @@ const startCamera = async (sessionId: number) => {
     fs.mkdirSync("public/gifs", { recursive: true });
   }
 
-  if (fs.existsSync(framesPath)) {
-    fs.rmSync(framesPath, { recursive: true });
+  if (!fs.existsSync(framesPath)) {
+    fs.mkdirSync(framesPath, { recursive: true });
   }
 
-  fs.mkdirSync(framesPath, { recursive: true });
+  globalState.recordCount++;
 
   exec(
-    `${process.env.FFMPEG_CAMERA} "${framesPath}/frame%04d.png" && ${process.env.GIFSKI} -o public/gifs/gif-${id}.gif resources/frames/session-${id}/frame*.png`,
+    `${process.env.FFMPEG_CAMERA} "${framesPath}/frame-${globalState.recordCount}%04d.png" && ${process.env.GIFSKI} -o public/gifs/gif-${id}.gif resources/frames/session-${id}/frame-*.png`,
     async (error) => {
-      processing = false;
+      globalState.processing = false;
 
       if (error) {
         logger("Error:", error);
@@ -77,4 +76,4 @@ const startCamera = async (sessionId: number) => {
   );
 };
 
-export default startCamera;
+export default recordAndSave;

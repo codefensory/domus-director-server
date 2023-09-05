@@ -13,10 +13,24 @@
       "time": 0
     }
   },
-  "startCamera": {
+  "record": {
+    "clip": {
+      "name": "CLIP3",
+      "time": 0
+    }
+  },
+  "recordAndSave": {
     "clip": {
       "name": "CLIP5",
       "time": 5
+    }
+  },
+  "enableGreenButton": {
+    "arduinoCommand": "/arduino?speed=1&power=on&light=on",
+    "clientCommand": "canSkip",
+    "clip": {
+      "name": "CLIP3",
+      "time": 3
     }
   },
   "hacking": {
