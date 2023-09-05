@@ -3,7 +3,7 @@ import { globalState } from "./state.js";
 
 let canPressButton = false;
 
-let greenCount = 0;
+let startCount = 0;
 
 let currTimeout = null;
 
@@ -34,6 +34,18 @@ async function start() {
         if (globalState.currentVideo === 0) {
           videosManager.nextVideo();
         }
+
+        startCount++;
+
+        if (startCount >= 3) {
+          window.location.reload();
+        } else {
+          clearTimeout(currTimeout);
+
+          currTimeout = setTimeout(() => {
+            startCount = 0;
+          }, 500);
+        }
         break;
 
       case "2":
@@ -45,19 +57,6 @@ async function start() {
         if (globalState.currentVideo === 3) {
           videosManager.nextVideo();
         }
-
-        greenCount++;
-
-        if (greenCount >= 3) {
-          window.location.reload();
-        } else {
-          clearTimeout(currTimeout);
-
-          currTimeout = setTimeout(() => {
-            greenCount = 0;
-          }, 500);
-        }
-
         break;
 
       case "3":
