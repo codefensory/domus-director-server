@@ -45,6 +45,7 @@ export async function sendArduinoCommand(command: string): Promise<Result<Respon
 export const events: Record<string, (sessionId: number) => Promise<void>> = {
   endSession,
   record,
+  record2: record,
   recordAndSave,
   startSession,
 };
