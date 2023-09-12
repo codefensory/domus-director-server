@@ -11,7 +11,7 @@ const app = express();
 
 const port = (process.env.PORT || 8080) as number;
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 12;
 
 app.use(cors({ origin: "*" }));
 
@@ -61,6 +61,24 @@ app.get("/sessions/:page", async (req, res) => {
     sessions,
     total,
   });
+});
+
+app.delete("/sessions/", async (req, res) => {
+  const ids = (req.query.ids as string).split(",");
+
+  logger("ids", ids);
+
+  const result = await prisma.session.deleteMany({
+    where: {
+      id: {
+        in: ids.map((id) => Number(id)),
+      },
+    },
+  });
+
+  logger("result", result);
+
+  res.send("ok");
 });
 
 function init() {

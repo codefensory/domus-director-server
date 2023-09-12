@@ -1,47 +1,51 @@
 import { Job } from "bee-queue";
 import debug from "debug";
 import fs from "fs";
-import FormData from "form-data";
 import { prisma } from "../utils";
 import axios from "axios";
+import AWS from "aws-sdk";
 
 const logger = debug("api:workers:uploadGif");
 
 const uploadGifProcessor = async (job: Job<any>) => {
   try {
-    const formData = new FormData();
-
     logger("Getting image...");
 
-    formData.append(
-      "photo",
-      fs.createReadStream(`public/gifs/gif-${job.data.id}.gif`)
-    );
+    const s3 = new AWS.S3();
+
+    const fileName = `gif-${job.data.id}.gif`;
+
+    const fileData = fs.readFileSync(`public/gifs/gif-${job.data.id}.gif`);
 
     logger("Uploading image...");
 
-    const response = await axios.post(
-      "https://black_hole-3kf-1-g3800601.deta.app/api/integration/pm9pdj9x8aqx",
-      formData,
+    s3.upload(
       {
-        headers: {
-          ...formData.getHeaders(),
-        },
+        Bucket: "domus-simulator-gif",
+        Key: fileName,
+        Body: fileData,
+      },
+      async (err, data) => {
+        if (err) {
+          logger("Upload Error:", err);
+
+          return;
+        }
+
+        logger("response:", data);
+
+        logger("Updating db...");
+
+        await prisma.session.update({
+          data: {
+            downloadUrl: data.Location,
+          },
+          where: { id: job.data.id },
+        });
+
+        logger("Upload image complete!");
       }
     );
-
-    logger("response:", response.data);
-
-    logger("Updating db...");
-
-    await prisma.session.update({
-      data: {
-        downloadUrl: response.data.url,
-      },
-      where: { id: job.data.id },
-    });
-
-    logger("Upload image complete!");
   } catch (error) {
     logger("Error:", error);
 
