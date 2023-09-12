@@ -20,13 +20,9 @@ app.use("/public", express.static("public"));
 app.get("/command/:event", async (req, res) => {
   const event = req.params.event;
 
-  const result = await sendArduinoCommand(event);
+  sendArduinoCommand(event);
 
-  if (result.isErr()) {
-    logger("Error sending command to arduino", result.unwrapErr());
-  }
-
-  await events[event]?.(globalState.currentSessionId);
+  events[event]?.(globalState.currentSessionId);
 
   res.status(200).send("OK");
 });

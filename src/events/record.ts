@@ -13,7 +13,7 @@ const record = async (sessionId: number) => {
     return;
   }
 
-  await prisma.session.update({
+  prisma.session.update({
     data: { state: 1 },
     where: { id: sessionId },
   });

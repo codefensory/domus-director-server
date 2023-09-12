@@ -69,6 +69,8 @@ const recordAndSave = async (sessionId: number) => {
 
       generatePreviewQueue.createJob({ id }).save();
 
+      globalState.recordCount = 0;
+
       try {
         fs.rmSync(framesPath, { recursive: true });
       } catch {}

@@ -26,7 +26,7 @@ export async function sendArduinoCommand(command: string): Promise<Result<Respon
   if (responseResult.isErr()) {
     const error = responseResult.unwrapErr();
 
-    logger(error);
+    logger("Error sending command to arduino", error);
 
     return Err(error);
   }
