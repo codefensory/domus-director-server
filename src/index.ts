@@ -38,7 +38,8 @@ app.get("/sessions/:page", async (req, res) => {
 
   const sessions = await prisma.session.findMany({
     where: {
-      state: { gte: 1 },
+      preview: { not: null },
+      url: { not: null },
     },
     orderBy: {
       id: "desc",
@@ -49,7 +50,8 @@ app.get("/sessions/:page", async (req, res) => {
 
   const total = await prisma.session.count({
     where: {
-      state: { gte: 1 },
+      preview: { not: null },
+      url: { not: null },
     },
   });
 
