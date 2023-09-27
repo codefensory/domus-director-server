@@ -49,6 +49,10 @@ async function start() {
         break;
 
       case "2":
+        if (!globalState.canPress) {
+          break;
+        }
+
         if (globalState.currentVideo === 2 && globalState.canSkip) {
           videosManager.skipAndNextVideo();
           globalState.canSkip = false;
@@ -57,12 +61,18 @@ async function start() {
         if (globalState.currentVideo === 3) {
           videosManager.nextVideo();
         }
+
         break;
 
       case "3":
+        if (!globalState.canPress) {
+          break;
+        }
+
         if (globalState.currentVideo === 7) {
           videosManager.nextVideo();
         }
+
         break;
 
       default:

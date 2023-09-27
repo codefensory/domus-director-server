@@ -1,4 +1,5 @@
 import Media from "./Media.js";
+import { globalState } from "../state.js";
 
 class VideosManager {
   constructor(videos, medias) {
@@ -47,7 +48,7 @@ class VideosManager {
     return promise;
   }
 
-  preloadMedias() {
+  async preloadMedias() {
     const promises = [];
 
     for (let i = 1; i < this.medias.length; i++) {
@@ -56,7 +57,13 @@ class VideosManager {
       promises.push(this.medias[i].preload(video));
     }
 
-    return Promise.all(promises);
+    globalState.canPress = false;
+
+    const result = await Promise.all(promises);
+
+    globalState.canPress = true;
+
+    return result;
   }
 
   nextVideo() {
